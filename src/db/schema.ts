@@ -8,6 +8,7 @@ import {
   integer,
   pgEnum,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 // Enums
 export const transactionTypeEnum = pgEnum("transaction_type", [
@@ -77,6 +78,41 @@ export const budgets = pgTable("budgets", {
   color: varchar("color", { length: 7 }).default("#DC2626"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// ─── Relations ───────────────────────────────────────────────────────────────
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  transactions: many(transactions),
+  budgets: many(budgets),
+}));
+
+export const accountsRelations = relations(accounts, ({ many }) => ({
+  transactions: many(transactions, { relationName: "account" }),
+  incomingTransfers: many(transactions, { relationName: "toAccount" }),
+}));
+
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  category: one(categories, {
+    fields: [transactions.categoryId],
+    references: [categories.id],
+  }),
+  account: one(accounts, {
+    fields: [transactions.accountId],
+    references: [accounts.id],
+    relationName: "account",
+  }),
+  toAccount: one(accounts, {
+    fields: [transactions.toAccountId],
+    references: [accounts.id],
+    relationName: "toAccount",
+  }),
+}));
+
+export const budgetsRelations = relations(budgets, ({ one }) => ({
+  category: one(categories, {
+    fields: [budgets.categoryId],
+    references: [categories.id],
+  }),
+}));
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 export type Category = typeof categories.$inferSelect;
