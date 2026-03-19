@@ -1,14 +1,37 @@
-export { default } from "next-auth/middleware";
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+
+export async function middleware(request: NextRequest) {
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
+  const { pathname } = request.nextUrl;
+
+  // Allow auth-related routes and static assets
+  if (
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/_next") ||
+    pathname === "/logo.png" ||
+    pathname === "/favicon.ico"
+  ) {
+    return NextResponse.next();
+  }
+
+  // Redirect to login if not authenticated
+  if (!token) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
-    /*
-     * Protect everything except:
-     * - /login
-     * - /api/auth (NextAuth endpoints)
-     * - /_next (Next.js internals)
-     * - /logo.png, /favicon.ico (static assets)
-     */
-    "/((?!login|api/auth|_next|logo\\.png|favicon\\.ico).*)",
+    "/((?!_next/static|_next/image|logo\\.png|favicon\\.ico).*)",
   ],
 };

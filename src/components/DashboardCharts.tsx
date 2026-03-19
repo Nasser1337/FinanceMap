@@ -119,13 +119,14 @@ export default function DashboardCharts({
   // Custom treemap content
   const TreemapContent = (props: any) => {
     const { x, y, width, height, name, color } = props;
-    if (width < 40 || height < 30) return null;
+    if (!width || !height || width < 4 || height < 4) return null;
+    const label = name || "";
     return (
       <g>
-        <rect x={x} y={y} width={width} height={height} fill={color || "#DC2626"} rx={4} opacity={0.85} stroke="#fff" strokeWidth={2} />
-        {width > 60 && height > 40 && (
-          <text x={x + width / 2} y={y + height / 2} textAnchor="middle" dominantBaseline="central" className="text-[10px] fill-white font-medium" style={{ pointerEvents: "none" }}>
-            {name.length > 15 ? name.slice(0, 15) + "…" : name}
+        <rect x={x || 0} y={y || 0} width={width} height={height} fill={color || "#DC2626"} rx={4} opacity={0.85} stroke="#fff" strokeWidth={2} />
+        {width > 60 && height > 40 && label && (
+          <text x={(x || 0) + width / 2} y={(y || 0) + height / 2} textAnchor="middle" dominantBaseline="central" className="text-[10px] fill-white font-medium" style={{ pointerEvents: "none" }}>
+            {label.length > 15 ? label.slice(0, 15) + "…" : label}
           </text>
         )}
       </g>
@@ -194,7 +195,7 @@ export default function DashboardCharts({
                         outerRadius={100}
                         innerRadius={50}
                         paddingAngle={2}
-                        label={({ name, percent }) => `${name.length > 12 ? name.slice(0, 12) + "…" : name} ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, percent }) => { const n = name || ""; return `${n.length > 12 ? n.slice(0, 12) + "…" : n} ${(percent * 100).toFixed(0)}%`; }}
                         labelLine={{ strokeWidth: 1 }}
                       >
                         {spendingByCategory.map((entry, i) => (
@@ -223,7 +224,7 @@ export default function DashboardCharts({
                         outerRadius={100}
                         innerRadius={50}
                         paddingAngle={2}
-                        label={({ name, percent }) => `${name.length > 12 ? name.slice(0, 12) + "…" : name} ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, percent }) => { const n = name || ""; return `${n.length > 12 ? n.slice(0, 12) + "…" : n} ${(percent * 100).toFixed(0)}%`; }}
                         labelLine={{ strokeWidth: 1 }}
                       >
                         {incomeByCategory.map((entry, i) => (
