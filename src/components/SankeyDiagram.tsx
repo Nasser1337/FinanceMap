@@ -13,6 +13,8 @@ interface SankeyLinkExtra {
   source: number;
   target: number;
   value: number;
+  count?: number;
+  descriptions?: string[];
 }
 
 interface SankeyData {
@@ -123,10 +125,14 @@ export default function SankeyDiagram({ data, width: propWidth, height: propHeig
                 onMouseMove={(e) => {
                   const src = (link.source as unknown as SankeyNodeExtra).name;
                   const tgt = (link.target as unknown as SankeyNodeExtra).name;
+                  const countStr = link.count ? ` (${link.count}x)` : "";
+                  const descStr = link.descriptions?.length
+                    ? `\n${link.descriptions.join(", ")}`
+                    : "";
                   setTooltip({
                     x: e.nativeEvent.offsetX,
                     y: e.nativeEvent.offsetY - 40,
-                    text: `${src} → ${tgt}: ${formatEuro(link.value)}`,
+                    text: `${src} → ${tgt}: ${formatEuro(link.value)}${countStr}${descStr}`,
                   });
                 }}
                 onMouseLeave={() => setTooltip(null)}

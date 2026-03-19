@@ -167,6 +167,30 @@ export const translations = {
     language: "Taal",
     languageSetting: "Taal / Langue",
     languageSettingDesc: "Kies je voorkeurstaal voor de applicatie.",
+
+    // Parent/child categories
+    parentCategory: "Hoofdcategorie",
+    noParent: "Geen (hoofdcategorie)",
+    subcategory: "Subcategorie",
+    addSubcategory: "Subcategorie toevoegen",
+    subcategories: "subcategorieën",
+    childrenWillBeDeleted: "Alle subcategorieën worden ook verwijderd.",
+
+    // Enhanced Sankey / Charts
+    viewSankey: "Sankey",
+    viewBar: "Staafdiagram",
+    viewPie: "Taartdiagram",
+    viewLine: "Lijndiagram",
+    viewTreemap: "Treemap",
+    incomeVsExpenses: "Inkomsten vs Uitgaven",
+    monthlyTrend: "Maandelijks Verloop",
+    spendingBreakdown: "Uitgavenverdeling",
+    categoryBreakdown: "Verdeling per Categorie",
+    noDataAvailable: "Geen data beschikbaar",
+    totalAmount: "Totaalbedrag",
+    numberOfTransactions: "Aantal transacties",
+    averageTransaction: "Gemiddeld bedrag",
+    largestTransaction: "Grootste transactie",
   },
   fr: {
     // Sidebar
@@ -334,6 +358,30 @@ export const translations = {
     language: "Langue",
     languageSetting: "Taal / Langue",
     languageSettingDesc: "Choisissez votre langue préférée pour l'application.",
+
+    // Parent/child categories
+    parentCategory: "Catégorie parente",
+    noParent: "Aucune (catégorie principale)",
+    subcategory: "Sous-catégorie",
+    addSubcategory: "Ajouter une sous-catégorie",
+    subcategories: "sous-catégories",
+    childrenWillBeDeleted: "Toutes les sous-catégories seront également supprimées.",
+
+    // Enhanced Sankey / Charts
+    viewSankey: "Sankey",
+    viewBar: "Barres",
+    viewPie: "Camembert",
+    viewLine: "Ligne",
+    viewTreemap: "Treemap",
+    incomeVsExpenses: "Revenus vs Dépenses",
+    monthlyTrend: "Tendance Mensuelle",
+    spendingBreakdown: "Répartition des Dépenses",
+    categoryBreakdown: "Répartition par Catégorie",
+    noDataAvailable: "Aucune donnée disponible",
+    totalAmount: "Montant total",
+    numberOfTransactions: "Nombre de transactions",
+    averageTransaction: "Montant moyen",
+    largestTransaction: "Plus grande transaction",
   },
 } as const;
 

@@ -12,10 +12,11 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Languages,
 } from "lucide-react";
 import { useState } from "react";
 import { useLanguage } from "@/lib/LanguageContext";
-import type { TranslationKey } from "@/lib/i18n";
+import type { TranslationKey, Locale } from "@/lib/i18n";
 
 const navItems: { href: string; labelKey: TranslationKey; icon: typeof LayoutDashboard }[] = [
   { href: "/", labelKey: "dashboard", icon: LayoutDashboard },
@@ -29,7 +30,11 @@ const navItems: { href: string; labelKey: TranslationKey; icon: typeof LayoutDas
 export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const { t } = useLanguage();
+  const { t, locale, setLocale } = useLanguage();
+
+  const toggleLocale = () => {
+    setLocale(locale === "nl" ? "fr" : "nl");
+  };
 
   return (
     <aside
@@ -40,7 +45,7 @@ export default function Sidebar() {
       {/* Logo area */}
       <div className="px-4 py-6 flex items-center gap-3 border-b border-dark-700">
         <div className="w-10 h-10 flex-shrink-0 bg-white rounded-lg p-1 flex items-center justify-center">
-          <Image src="/logo.png" alt="MediDental" width={32} height={32} className="object-contain" />
+          <Image src="/logo.png" alt="FinanceMap" width={32} height={32} className="object-contain" />
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
@@ -72,6 +77,23 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Language switcher */}
+      <div className="px-2 pb-2">
+        <button
+          onClick={toggleLocale}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dark-300 hover:text-white hover:bg-dark-800 transition-all"
+          title={collapsed ? (locale === "nl" ? "Français" : "Nederlands") : undefined}
+        >
+          <Languages size={20} className="flex-shrink-0" />
+          {!collapsed && (
+            <span className="flex items-center gap-2">
+              <span className="text-base">{locale === "nl" ? "🇳🇱" : "🇫🇷"}</span>
+              {locale === "nl" ? "Nederlands" : "Français"}
+            </span>
+          )}
+        </button>
+      </div>
 
       {/* Footer */}
       {!collapsed && (

@@ -9,7 +9,7 @@ import { sql } from "drizzle-orm";
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const month = searchParams.get("month") || getCurrentMonth(); // YYYY-MM format
+    const month = searchParams.get("month") || getCurrentMonth();
 
     const [year, monthStr] = month.split("-");
     const monthStart = new Date(`${year}-${monthStr}-01`);
@@ -21,6 +21,22 @@ export async function GET(request: NextRequest) {
       59,
       59
     );
+
+    // Get all categories for parent path resolution
+    const allCategories = await db.query.categories.findMany();
+    const categoryMap = new Map(allCategories.map((c) => [c.id, c]));
+
+    // Build category path: "Parent > Child > Grandchild"
+    const getCategoryPath = (catId: number | null): string => {
+      if (!catId) return "";
+      const parts: string[] = [];
+      let current = categoryMap.get(catId);
+      while (current) {
+        parts.unshift(current.name);
+        current = current.parentId ? categoryMap.get(current.parentId) : undefined;
+      }
+      return parts.join(" › ");
+    };
 
     // Get all transactions for the month
     const monthTransactions = await db.query.transactions.findMany({
@@ -42,11 +58,8 @@ export async function GET(request: NextRequest) {
 
     monthTransactions.forEach((tx) => {
       const amount = parseFloat(String(tx.amount));
-      if (tx.type === "income") {
-        totalIncome += amount;
-      } else if (tx.type === "expense") {
-        totalExpenses += amount;
-      }
+      if (tx.type === "income") totalIncome += amount;
+      else if (tx.type === "expense") totalExpenses += amount;
     });
 
     // Get all accounts for balance
@@ -60,31 +73,79 @@ export async function GET(request: NextRequest) {
     const recentTransactions = await db.query.transactions.findMany({
       limit: 10,
       orderBy: desc(transactions.date),
-      with: {
-        category: true,
-        account: true,
-        toAccount: true,
-      },
+      with: { category: true, account: true, toAccount: true },
     });
 
-    // Calculate spending by category for current month
-    const spendingByCategory: Record<string, number> = {};
+    // Spending by category with count and descriptions
+    const spendingMap: Record<string, { total: number; count: number; color: string; descriptions: string[] }> = {};
     monthTransactions.forEach((tx) => {
       if (tx.type === "expense" && tx.category) {
+        const name = getCategoryPath(tx.categoryId) || tx.category.name;
+        if (!spendingMap[name]) {
+          spendingMap[name] = { total: 0, count: 0, color: tx.category.color || "#DC2626", descriptions: [] };
+        }
         const amount = parseFloat(String(tx.amount));
-        spendingByCategory[tx.category.name] =
-          (spendingByCategory[tx.category.name] || 0) + amount;
+        spendingMap[name].total += amount;
+        spendingMap[name].count += 1;
+        if (spendingMap[name].descriptions.length < 5) {
+          spendingMap[name].descriptions.push(tx.description);
+        }
       }
     });
 
-    // Generate Sankey diagram data
-    const sankeyData = generateSankeyData(monthTransactions);
+    const spendingByCategoryArray = Object.entries(spendingMap)
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.total - a.total);
 
-    // Spending by category as array with color
-    const spendingByCategoryArray = Object.entries(spendingByCategory).map(([name, total]) => {
-      const cat = monthTransactions.find((tx) => tx.category?.name === name)?.category;
-      return { name, total, color: cat?.color || "#DC2626" };
-    }).sort((a, b) => b.total - a.total);
+    // Income by category for pie chart
+    const incomeMap: Record<string, { total: number; count: number; color: string }> = {};
+    monthTransactions.forEach((tx) => {
+      if (tx.type === "income" && tx.category) {
+        const name = getCategoryPath(tx.categoryId) || tx.category.name;
+        if (!incomeMap[name]) {
+          incomeMap[name] = { total: 0, count: 0, color: tx.category.color || "#22c55e" };
+        }
+        incomeMap[name].total += parseFloat(String(tx.amount));
+        incomeMap[name].count += 1;
+      }
+    });
+    const incomeByCategoryArray = Object.entries(incomeMap)
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.total - a.total);
+
+    // Monthly trend: last 6 months including current
+    const trendData: { month: string; income: number; expenses: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(monthStart);
+      d.setMonth(d.getMonth() - i);
+      const trendStart = new Date(d.getFullYear(), d.getMonth(), 1);
+      const trendEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+
+      const trendTx = await db.query.transactions.findMany({
+        where: and(gte(transactions.date, trendStart), lte(transactions.date, trendEnd)),
+      });
+
+      let inc = 0, exp = 0;
+      trendTx.forEach((tx) => {
+        const a = parseFloat(String(tx.amount));
+        if (tx.type === "income") inc += a;
+        else if (tx.type === "expense") exp += a;
+      });
+
+      const label = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      trendData.push({ month: label, income: inc, expenses: exp });
+    }
+
+    // Generate Sankey diagram data with parent category paths
+    const sankeyData = generateSankeyData(monthTransactions, getCategoryPath);
+
+    // Stats for the dashboard
+    const expenseAmounts = monthTransactions
+      .filter((tx) => tx.type === "expense")
+      .map((tx) => parseFloat(String(tx.amount)));
+    const incomeAmounts = monthTransactions
+      .filter((tx) => tx.type === "income")
+      .map((tx) => parseFloat(String(tx.amount)));
 
     return NextResponse.json({
       totalIncome,
@@ -97,11 +158,21 @@ export async function GET(request: NextRequest) {
         amount: tx.amount,
         type: tx.type,
         date: tx.date,
-        categoryName: tx.category?.name || null,
+        categoryName: tx.category ? getCategoryPath(tx.categoryId) || tx.category.name : null,
         accountName: tx.account?.name || null,
       })),
       spendingByCategory: spendingByCategoryArray,
+      incomeByCategory: incomeByCategoryArray,
       sankeyData,
+      trendData,
+      stats: {
+        avgExpense: expenseAmounts.length > 0 ? expenseAmounts.reduce((a, b) => a + b, 0) / expenseAmounts.length : 0,
+        avgIncome: incomeAmounts.length > 0 ? incomeAmounts.reduce((a, b) => a + b, 0) / incomeAmounts.length : 0,
+        largestExpense: expenseAmounts.length > 0 ? Math.max(...expenseAmounts) : 0,
+        largestIncome: incomeAmounts.length > 0 ? Math.max(...incomeAmounts) : 0,
+        expenseCount: expenseAmounts.length,
+        incomeCount: incomeAmounts.length,
+      },
     });
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
@@ -119,54 +190,78 @@ function getCurrentMonth(): string {
   return `${year}-${month}`;
 }
 
-function generateSankeyData(transactionList: any[]) {
+function generateSankeyData(
+  transactionList: any[],
+  getCategoryPath: (catId: number | null) => string
+) {
   const nodeNames: string[] = ["Omzet"];
   const nodeSet = new Set<string>();
   nodeSet.add("Omzet");
 
-  const incomeByCategory: Record<string, number> = {};
-  const expenseByCategory: Record<string, number> = {};
+  const incomeByCategory: Record<string, { value: number; count: number; descriptions: string[] }> = {};
+  const expenseByCategory: Record<string, { value: number; count: number; descriptions: string[] }> = {};
 
-  // Process transactions
   transactionList.forEach((tx) => {
     const amount = parseFloat(String(tx.amount));
 
     if (tx.type === "income" && tx.category) {
-      const categoryName = tx.category.name;
+      const categoryName = getCategoryPath(tx.categoryId) || tx.category.name;
       if (!nodeSet.has(categoryName)) {
         nodeNames.push(categoryName);
         nodeSet.add(categoryName);
       }
-      incomeByCategory[categoryName] =
-        (incomeByCategory[categoryName] || 0) + amount;
+      if (!incomeByCategory[categoryName]) {
+        incomeByCategory[categoryName] = { value: 0, count: 0, descriptions: [] };
+      }
+      incomeByCategory[categoryName].value += amount;
+      incomeByCategory[categoryName].count += 1;
+      if (incomeByCategory[categoryName].descriptions.length < 3) {
+        incomeByCategory[categoryName].descriptions.push(tx.description);
+      }
     } else if (tx.type === "expense" && tx.category) {
-      const categoryName = tx.category.name;
+      const categoryName = getCategoryPath(tx.categoryId) || tx.category.name;
       if (!nodeSet.has(categoryName)) {
         nodeNames.push(categoryName);
         nodeSet.add(categoryName);
       }
-      expenseByCategory[categoryName] =
-        (expenseByCategory[categoryName] || 0) + amount;
+      if (!expenseByCategory[categoryName]) {
+        expenseByCategory[categoryName] = { value: 0, count: 0, descriptions: [] };
+      }
+      expenseByCategory[categoryName].value += amount;
+      expenseByCategory[categoryName].count += 1;
+      if (expenseByCategory[categoryName].descriptions.length < 3) {
+        expenseByCategory[categoryName].descriptions.push(tx.description);
+      }
     }
   });
 
   const nodes = nodeNames.map((name) => ({ name }));
-  const links: { source: number; target: number; value: number }[] = [];
+  const links: { source: number; target: number; value: number; count: number; descriptions: string[] }[] = [];
   const revenueIndex = 0;
 
-  // Create links: income categories -> Omzet
-  Object.entries(incomeByCategory).forEach(([category, amount]) => {
+  Object.entries(incomeByCategory).forEach(([category, data]) => {
     const sourceIndex = nodeNames.indexOf(category);
     if (sourceIndex !== -1) {
-      links.push({ source: sourceIndex, target: revenueIndex, value: amount });
+      links.push({
+        source: sourceIndex,
+        target: revenueIndex,
+        value: data.value,
+        count: data.count,
+        descriptions: data.descriptions,
+      });
     }
   });
 
-  // Create links: Omzet -> expense categories
-  Object.entries(expenseByCategory).forEach(([category, amount]) => {
+  Object.entries(expenseByCategory).forEach(([category, data]) => {
     const targetIndex = nodeNames.indexOf(category);
     if (targetIndex !== -1) {
-      links.push({ source: revenueIndex, target: targetIndex, value: amount });
+      links.push({
+        source: revenueIndex,
+        target: targetIndex,
+        value: data.value,
+        count: data.count,
+        descriptions: data.descriptions,
+      });
     }
   });
 

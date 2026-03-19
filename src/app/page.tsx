@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import StatCard from "@/components/StatCard";
 import SankeyDiagram from "@/components/SankeyDiagram";
+import DashboardCharts from "@/components/DashboardCharts";
 import PageHeader from "@/components/PageHeader";
 import { formatCurrency, formatDate, getCurrentMonth } from "@/lib/utils";
 import { useLanguage } from "@/lib/LanguageContext";
@@ -30,8 +31,21 @@ interface DashboardData {
     categoryName: string | null;
     accountName: string | null;
   }[];
-  spendingByCategory: { name: string; total: number; color: string }[];
-  sankeyData: { nodes: { name: string; color?: string }[]; links: { source: number; target: number; value: number }[] };
+  spendingByCategory: { name: string; total: number; count: number; color: string; descriptions: string[] }[];
+  incomeByCategory: { name: string; total: number; count: number; color: string }[];
+  sankeyData: {
+    nodes: { name: string; color?: string }[];
+    links: { source: number; target: number; value: number; count?: number; descriptions?: string[] }[];
+  };
+  trendData: { month: string; income: number; expenses: number }[];
+  stats: {
+    avgExpense: number;
+    avgIncome: number;
+    largestExpense: number;
+    largestIncome: number;
+    expenseCount: number;
+    incomeCount: number;
+  };
 }
 
 export default function DashboardPage() {
@@ -144,6 +158,20 @@ export default function DashboardPage() {
         <SankeyDiagram data={data?.sankeyData || { nodes: [], links: [] }} />
       </div>
 
+      {/* Charts section */}
+      {data && (
+        <div className="mb-8">
+          <DashboardCharts
+            spendingByCategory={data.spendingByCategory || []}
+            incomeByCategory={data.incomeByCategory || []}
+            trendData={data.trendData || []}
+            stats={data.stats || { avgExpense: 0, avgIncome: 0, largestExpense: 0, largestIncome: 0, expenseCount: 0, incomeCount: 0 }}
+            totalIncome={data.totalIncome}
+            totalExpenses={data.totalExpenses}
+          />
+        </div>
+      )}
+
       {/* Bottom row: Spending + Recent Transactions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top spending */}
@@ -155,9 +183,12 @@ export default function DashboardPage() {
                 const maxAmount = data.spendingByCategory[0].total;
                 const pct = maxAmount > 0 ? (cat.total / maxAmount) * 100 : 0;
                 return (
-                  <div key={i}>
+                  <div key={i} title={cat.descriptions?.join(", ") || ""}>
                     <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-dark-600 font-medium">{cat.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-dark-600 font-medium">{cat.name}</span>
+                        <span className="text-[10px] text-dark-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{cat.count}x</span>
+                      </div>
                       <span className="text-dark-800 font-bold">{formatCurrency(cat.total)}</span>
                     </div>
                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
