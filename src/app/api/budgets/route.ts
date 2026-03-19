@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { budgets } from "@/db/schema";
 
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
       .returning();
 
     const fullBudget = await db.query.budgets.findFirst({
-      where: (b) => b.id === result[0].id,
+      where: (b, { eq }) => eq(b.id, result[0].id),
       with: {
         category: true,
       },
