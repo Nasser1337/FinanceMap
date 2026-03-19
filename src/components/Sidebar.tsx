@@ -14,19 +14,22 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
+import { useLanguage } from "@/lib/LanguageContext";
+import type { TranslationKey } from "@/lib/i18n";
 
-const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/transactions", label: "Transacties", icon: ArrowLeftRight },
-  { href: "/categories", label: "Categorieën", icon: Tag },
-  { href: "/accounts", label: "Rekeningen", icon: Wallet },
-  { href: "/budgets", label: "Budgetten", icon: PiggyBank },
-  { href: "/settings", label: "Instellingen", icon: Settings },
+const navItems: { href: string; labelKey: TranslationKey; icon: typeof LayoutDashboard }[] = [
+  { href: "/", labelKey: "dashboard", icon: LayoutDashboard },
+  { href: "/transactions", labelKey: "transactions", icon: ArrowLeftRight },
+  { href: "/categories", labelKey: "categories", icon: Tag },
+  { href: "/accounts", labelKey: "accounts", icon: Wallet },
+  { href: "/budgets", labelKey: "budgets", icon: PiggyBank },
+  { href: "/settings", labelKey: "settings", icon: Settings },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <aside
@@ -49,8 +52,9 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 py-4 space-y-1 px-2">
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {navItems.map(({ href, labelKey, icon: Icon }) => {
           const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
+          const label = t(labelKey);
           return (
             <Link
               key={href}

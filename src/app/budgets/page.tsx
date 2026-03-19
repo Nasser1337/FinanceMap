@@ -5,6 +5,7 @@ import PageHeader from "@/components/PageHeader";
 import Modal from "@/components/Modal";
 import { formatCurrency } from "@/lib/utils";
 import { PiggyBank, Edit2, Trash2, Loader2, Plus } from "lucide-react";
+import { useLanguage } from "@/lib/LanguageContext";
 
 interface Budget {
   id: number;
@@ -49,6 +50,7 @@ const COLOR_PALETTE = [
 ];
 
 export default function BudgetsPage() {
+  const { t } = useLanguage();
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -147,7 +149,7 @@ export default function BudgetsPage() {
     e.preventDefault();
 
     if (!formData.name.trim() || !formData.monthlyLimit) {
-      alert("Vul alle verplichte velden in");
+      alert(t("fillRequired"));
       return;
     }
 
@@ -177,7 +179,7 @@ export default function BudgetsPage() {
       handleCloseModal();
     } catch (error) {
       console.error("Error saving budget:", error);
-      alert("Er is een fout opgetreden bij het opslaan");
+      alert(t("saveError"));
     } finally {
       setSaving(false);
     }
@@ -197,7 +199,7 @@ export default function BudgetsPage() {
       setConfirmDelete(null);
     } catch (error) {
       console.error("Error deleting budget:", error);
-      alert("Er is een fout opgetreden bij het verwijderen");
+      alert(t("deleteError"));
     } finally {
       setDeleting(null);
     }
@@ -256,20 +258,20 @@ export default function BudgetsPage() {
           {/* Limit and Period */}
           <div className="mb-4 pb-4 border-b border-gray-100">
             <div className="flex items-baseline justify-between">
-              <span className="text-sm text-dark-600">Limiet</span>
+              <span className="text-sm text-dark-600">{t("limit")}</span>
               <span className="text-lg font-bold text-dark-800">
                 {formatCurrency(limit)}
               </span>
             </div>
             <p className="text-xs text-dark-400 mt-1">
-              {budget.period === "monthly" ? "Maandelijks" : "Jaarlijks"}
+              {budget.period === "monthly" ? t("monthly") : t("yearly")}
             </p>
           </div>
 
           {/* Progress Bar */}
           <div className="mb-3">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-dark-600">Uitgegeven</span>
+              <span className="text-xs font-medium text-dark-600">{t("spent")}</span>
               <span className="text-sm font-semibold text-dark-800">
                 {formatCurrency(spent)}
               </span>
@@ -284,10 +286,10 @@ export default function BudgetsPage() {
               />
             </div>
             <p className="text-xs text-dark-500 mt-1.5">
-              {percentage.toFixed(0)}% van budget
+              {percentage.toFixed(0)}% {t("ofBudget")}
               {percentage > 100 && (
                 <span className="text-red-600 font-medium ml-1">
-                  ({formatCurrency(spent - limit)} over budget)
+                  ({formatCurrency(spent - limit)} {t("overBudget")})
                 </span>
               )}
             </p>
@@ -301,15 +303,15 @@ export default function BudgetsPage() {
               title="Bewerk"
             >
               <Edit2 size={16} />
-              <span className="text-xs font-medium">Bewerk</span>
+              <span className="text-xs font-medium">{t("edit")}</span>
             </button>
             <button
               onClick={() => setConfirmDelete(budget.id)}
               className="flex-1 p-2 rounded-lg hover:bg-red-50 text-dark-400 hover:text-red-600 transition-colors flex items-center justify-center gap-2"
-              title="Verwijder"
+              title={t("delete")}
             >
               <Trash2 size={16} />
-              <span className="text-xs font-medium">Verwijder</span>
+              <span className="text-xs font-medium">{t("delete")}</span>
             </button>
           </div>
         </div>
@@ -319,13 +321,13 @@ export default function BudgetsPage() {
 
   const EmptyState = () => (
     <div className="p-12 text-center">
-      <p className="text-dark-400 text-sm mb-4">Geen budgetten ingesteld</p>
+      <p className="text-dark-400 text-sm mb-4">{t("noBudgetsSet")}</p>
       <button
         onClick={() => handleOpenModal()}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors text-sm font-medium"
       >
         <Plus size={16} />
-        Budget toevoegen
+        {t("addBudget")}
       </button>
     </div>
   );
@@ -334,11 +336,11 @@ export default function BudgetsPage() {
     <div className="p-6 max-w-7xl">
       {/* Page Header */}
       <PageHeader
-        title="Budgetten"
-        subtitle="Stel maandelijkse limieten in per categorie"
+        title={t("budgets")}
+        subtitle={t("setBudgetLimits")}
         icon={PiggyBank}
         action={{
-          label: "Toevoegen",
+          label: t("add"),
           onClick: () => handleOpenModal(),
         }}
       />
@@ -347,15 +349,15 @@ export default function BudgetsPage() {
       {!loading && budgets.length > 0 && (
         <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-            <p className="text-xs font-medium text-dark-500 mb-1">Totaal Budget</p>
+            <p className="text-xs font-medium text-dark-500 mb-1">{t("totalBudget")}</p>
             <p className="text-2xl font-bold text-dark-800">{formatCurrency(totalBudget)}</p>
           </div>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-            <p className="text-xs font-medium text-dark-500 mb-1">Totaal Uitgegeven</p>
+            <p className="text-xs font-medium text-dark-500 mb-1">{t("totalSpent")}</p>
             <p className="text-2xl font-bold text-dark-800">{formatCurrency(totalSpent)}</p>
           </div>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-            <p className="text-xs font-medium text-dark-500 mb-1">Nog Beschikbaar</p>
+            <p className="text-xs font-medium text-dark-500 mb-1">{t("stillAvailable")}</p>
             <p
               className={`text-2xl font-bold ${
                 totalSpent > totalBudget ? "text-red-600" : "text-green-600"
@@ -388,21 +390,21 @@ export default function BudgetsPage() {
       <Modal
         open={modalOpen}
         onClose={handleCloseModal}
-        title={editingId ? "Budget bewerken" : "Nieuw budget"}
+        title={editingId ? t("editBudget") : t("newBudget")}
         maxWidth="max-w-md"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-1">
-              Budgetnaam
+              {t("budgetName")}
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-              placeholder="Bijv. Boodschappen"
+              placeholder={t("budgetNamePlaceholder")}
               required
             />
           </div>
@@ -410,7 +412,7 @@ export default function BudgetsPage() {
           {/* Monthly Limit */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-1">
-              Limiet (EUR)
+              {t("limitEur")}
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500 font-medium">
@@ -433,7 +435,7 @@ export default function BudgetsPage() {
           {/* Category */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-1">
-              Categorie (optioneel)
+              {t("categoryOptional")}
             </label>
             <select
               value={formData.categoryId}
@@ -442,7 +444,7 @@ export default function BudgetsPage() {
               }
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm appearance-none bg-white"
             >
-              <option value="">Geen categorie</option>
+              <option value="">{t("noSpecificCategory")}</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id.toString()}>
                   {cat.name}
@@ -454,7 +456,7 @@ export default function BudgetsPage() {
           {/* Period */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-2">
-              Periode
+              {t("period")}
             </label>
             <div className="flex gap-2">
               {(["monthly", "yearly"] as const).map((period) => (
@@ -468,7 +470,7 @@ export default function BudgetsPage() {
                       : "bg-gray-100 text-dark-600 hover:bg-gray-200"
                   }`}
                 >
-                  {period === "monthly" ? "Maandelijks" : "Jaarlijks"}
+                  {period === "monthly" ? t("monthly") : t("yearly")}
                 </button>
               ))}
             </div>
@@ -477,7 +479,7 @@ export default function BudgetsPage() {
           {/* Color Picker */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-2">
-              Kleur
+              {t("color")}
             </label>
             <div className="grid grid-cols-4 gap-2">
               {COLOR_PALETTE.map((color) => (
@@ -504,7 +506,7 @@ export default function BudgetsPage() {
               onClick={handleCloseModal}
               className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-dark-800 font-medium hover:bg-gray-50 transition-colors"
             >
-              Annuleren
+              {t("cancel")}
             </button>
             <button
               type="submit"
@@ -512,7 +514,7 @@ export default function BudgetsPage() {
               className="flex-1 px-4 py-2 rounded-lg bg-primary-500 text-white font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {saving && <Loader2 size={16} className="animate-spin" />}
-              {editingId ? "Opslaan" : "Toevoegen"}
+              {editingId ? t("save") : t("add")}
             </button>
           </div>
         </form>
@@ -523,17 +525,17 @@ export default function BudgetsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <h3 className="text-lg font-bold text-dark-800 mb-2">
-              Budget verwijderen?
+              {t("deleteBudget")}
             </h3>
             <p className="text-sm text-dark-600 mb-6">
-              Deze actie kan niet ongedaan worden gemaakt.
+              {t("deleteConfirm")}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
                 className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-dark-800 font-medium hover:bg-gray-50 transition-colors"
               >
-                Annuleren
+                {t("cancel")}
               </button>
               <button
                 onClick={() => handleDeleteBudget(confirmDelete)}
@@ -543,7 +545,7 @@ export default function BudgetsPage() {
                 {deleting === confirmDelete && (
                   <Loader2 size={16} className="animate-spin" />
                 )}
-                Verwijderen
+                {t("deleteAction")}
               </button>
             </div>
           </div>

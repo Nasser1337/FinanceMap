@@ -16,6 +16,7 @@ import {
   HandCoins,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { useLanguage } from "@/lib/LanguageContext";
 
 interface Account {
   id: number;
@@ -36,12 +37,12 @@ interface FormData {
   color: string;
 }
 
-const ACCOUNT_TYPE_LABELS: Record<string, string> = {
-  checking: "Zichtrekening",
-  savings: "Spaarrekening",
-  cash: "Kas",
-  credit_card: "Kredietkaart",
-  loan: "Lening",
+const ACCOUNT_TYPE_KEYS: Record<string, string> = {
+  checking: "checking",
+  savings: "savings",
+  cash: "cash",
+  credit_card: "credit_card",
+  loan: "loan",
 };
 
 const ACCOUNT_TYPE_ICONS: Record<string, React.ComponentType<any>> = {
@@ -68,6 +69,15 @@ const COLOR_PALETTE = [
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
+
+  const ACCOUNT_TYPE_LABELS: Record<string, string> = {
+    checking: t("checking"),
+    savings: t("savings"),
+    cash: t("cash"),
+    credit_card: t("credit_card"),
+    loan: t("loan"),
+  };
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -135,7 +145,7 @@ export default function AccountsPage() {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      alert("Vul een rekeningnaam in");
+      alert(t("fillAccountName"));
       return;
     }
 
@@ -166,7 +176,7 @@ export default function AccountsPage() {
       handleCloseModal();
     } catch (error) {
       console.error("Error saving account:", error);
-      alert("Er is een fout opgetreden bij het opslaan");
+      alert(t("saveError"));
     } finally {
       setSaving(false);
     }
@@ -186,7 +196,7 @@ export default function AccountsPage() {
       setConfirmDelete(null);
     } catch (error) {
       console.error("Error deleting account:", error);
-      alert("Er is een fout opgetreden bij het verwijderen");
+      alert(t("deleteError"));
     } finally {
       setDeleting(null);
     }
@@ -231,14 +241,14 @@ export default function AccountsPage() {
               <button
                 onClick={() => handleOpenModal(account)}
                 className="p-2 rounded-lg hover:bg-gray-100 text-dark-400 hover:text-primary-500 transition-colors"
-                title="Bewerk"
+                title={t("edit")}
               >
                 <Edit2 size={16} />
               </button>
               <button
                 onClick={() => setConfirmDelete(account.id)}
                 className="p-2 rounded-lg hover:bg-red-50 text-dark-400 hover:text-primary-600 transition-colors"
-                title="Verwijder"
+                title={t("delete")}
               >
                 <Trash2 size={16} />
               </button>
@@ -247,7 +257,7 @@ export default function AccountsPage() {
 
           {/* Balance */}
           <div className="mb-3">
-            <p className="text-sm text-dark-400 mb-1">Saldo</p>
+            <p className="text-sm text-dark-400 mb-1">{t("saldo")}</p>
             <p className="text-2xl font-bold text-dark-800">
               {formatCurrency(account.balance)}
             </p>
@@ -268,11 +278,11 @@ export default function AccountsPage() {
     <div className="p-6 max-w-7xl">
       {/* Page Header */}
       <PageHeader
-        title="Rekeningen"
-        subtitle="Beheer je bankrekeningen en kasregisters"
+        title={t("accounts")}
+        subtitle={t("manageAccounts")}
         icon={Wallet}
         action={{
-          label: "Toevoegen",
+          label: t("add"),
           onClick: () => handleOpenModal(),
         }}
       />
@@ -288,13 +298,13 @@ export default function AccountsPage() {
           {accounts.length > 0 && (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
               <p className="text-sm font-medium text-dark-400 mb-1">
-                Totaal saldo
+                {t("totalBalance")}
               </p>
               <h2 className="text-4xl md:text-5xl font-bold text-dark-800">
                 {formatCurrency(totalBalance)}
               </h2>
               <p className="text-xs text-dark-400 mt-2">
-                {accounts.length} rekening{accounts.length !== 1 ? "en" : ""}
+                {accounts.length} {accounts.length !== 1 ? t("accountsCount") : t("accountCount")}
               </p>
             </div>
           )}
@@ -307,14 +317,14 @@ export default function AccountsPage() {
                 className="mx-auto mb-4 text-dark-400"
               />
               <p className="text-dark-600 mb-4">
-                Geen rekeningen gevonden. Voeg je eerste rekening toe om aan de slag te gaan.
+                {t("noAccountsFound")}
               </p>
               <button
                 onClick={() => handleOpenModal()}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors shadow-lg shadow-primary-500/20"
               >
                 <Plus size={16} />
-                Eerste rekening toevoegen
+                {t("addFirstAccount")}
               </button>
             </div>
           ) : (
@@ -331,14 +341,14 @@ export default function AccountsPage() {
       <Modal
         open={modalOpen}
         onClose={handleCloseModal}
-        title={editingId ? "Rekening bewerken" : "Nieuwe rekening"}
+        title={editingId ? t("editAccount") : t("newAccount")}
         maxWidth="max-w-md"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-1">
-              Rekeningnaam
+              {t("accountName")}
             </label>
             <input
               type="text"
@@ -347,7 +357,7 @@ export default function AccountsPage() {
                 setFormData({ ...formData, name: e.target.value })
               }
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-              placeholder="Bijv. ING Zichtrekening"
+              placeholder={t("accountNamePlaceholder")}
               required
             />
           </div>
@@ -378,7 +388,7 @@ export default function AccountsPage() {
           {/* Balance */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-1">
-              Saldo (EUR)
+              {t("balanceEur")}
             </label>
             <input
               type="number"
@@ -395,7 +405,7 @@ export default function AccountsPage() {
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-1">
-              Omschrijving
+              {t("descriptionOptional")}
             </label>
             <textarea
               value={formData.description}
@@ -403,7 +413,7 @@ export default function AccountsPage() {
                 setFormData({ ...formData, description: e.target.value })
               }
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm resize-none"
-              placeholder="Optionele omschrijving..."
+              placeholder={t("accountDescriptionPlaceholder")}
               rows={3}
             />
           </div>
@@ -411,7 +421,7 @@ export default function AccountsPage() {
           {/* Color Picker */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-2">
-              Kleur
+              {t("color")}
             </label>
             <div className="grid grid-cols-5 gap-2">
               {COLOR_PALETTE.map((color) => (
@@ -438,7 +448,7 @@ export default function AccountsPage() {
               onClick={handleCloseModal}
               className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-dark-800 font-medium hover:bg-gray-50 transition-colors"
             >
-              Annuleren
+              {t("cancel")}
             </button>
             <button
               type="submit"
@@ -446,7 +456,7 @@ export default function AccountsPage() {
               className="flex-1 px-4 py-2 rounded-lg bg-primary-500 text-white font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {saving && <Loader2 size={16} className="animate-spin" />}
-              {editingId ? "Opslaan" : "Toevoegen"}
+              {editingId ? t("save") : t("add")}
             </button>
           </div>
         </form>
@@ -457,17 +467,17 @@ export default function AccountsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <h3 className="text-lg font-bold text-dark-800 mb-2">
-              Rekening verwijderen?
+              {t("deleteAccount")}
             </h3>
             <p className="text-sm text-dark-600 mb-6">
-              Deze actie kan niet ongedaan worden gemaakt.
+              {t("deleteConfirm")}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
                 className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-dark-800 font-medium hover:bg-gray-50 transition-colors"
               >
-                Annuleren
+                {t("cancel")}
               </button>
               <button
                 onClick={() => handleDeleteAccount(confirmDelete)}
@@ -477,7 +487,7 @@ export default function AccountsPage() {
                 {deleting === confirmDelete && (
                   <Loader2 size={16} className="animate-spin" />
                 )}
-                Verwijderen
+                {t("deleteAction")}
               </button>
             </div>
           </div>

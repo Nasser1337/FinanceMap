@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import PageHeader from "@/components/PageHeader";
 import Modal from "@/components/Modal";
 import { formatCurrency, formatDate, getCurrentMonth } from "@/lib/utils";
+import { useLanguage } from "@/lib/LanguageContext";
 import {
   ArrowLeftRight,
   Search,
@@ -66,6 +67,7 @@ export default function TransactionsPage() {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [typeFilter, setTypeFilter] = useState<"all" | "income" | "expense">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const { t } = useLanguage();
 
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -196,7 +198,7 @@ export default function TransactionsPage() {
       !formData.accountId ||
       !formData.date
     ) {
-      alert("Vul alle verplichte velden in");
+      alert(t("fillRequired"));
       return;
     }
 
@@ -234,7 +236,7 @@ export default function TransactionsPage() {
       handleCloseModal();
     } catch (error) {
       console.error("Error saving transaction:", error);
-      alert("Er is een fout opgetreden bij het opslaan");
+      alert(t("saveError"));
     } finally {
       setSaving(false);
     }
@@ -254,7 +256,7 @@ export default function TransactionsPage() {
       setConfirmDelete(null);
     } catch (error) {
       console.error("Error deleting transaction:", error);
-      alert("Er is een fout opgetreden bij het verwijderen");
+      alert(t("deleteError"));
     } finally {
       setDeleting(null);
     }
@@ -273,11 +275,11 @@ export default function TransactionsPage() {
     <div className="p-6 max-w-7xl">
       {/* Page Header */}
       <PageHeader
-        title="Transacties"
-        subtitle="Beheer je inkomsten en uitgaven"
+        title={t("transactions")}
+        subtitle={t("manageIncomeExpenses")}
         icon={ArrowLeftRight}
         action={{
-          label: "Toevoegen",
+          label: t("add"),
           onClick: () => handleOpenModal(),
         }}
       />
@@ -287,7 +289,7 @@ export default function TransactionsPage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
           {/* Month Selector */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-dark-400">Maand</label>
+            <label className="text-xs font-medium text-dark-400">{t("month")}</label>
             <input
               type="month"
               value={selectedMonth}
@@ -298,7 +300,7 @@ export default function TransactionsPage() {
 
           {/* Type Filter */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-dark-400">Type</label>
+            <label className="text-xs font-medium text-dark-400">{t("type")}</label>
             <div className="flex gap-2">
               {(
                 ["all", "income", "expense"] as const
@@ -313,10 +315,10 @@ export default function TransactionsPage() {
                   }`}
                 >
                   {type === "all"
-                    ? "Alles"
+                    ? t("all")
                     : type === "income"
-                      ? "Inkomsten"
-                      : "Uitgaven"}
+                      ? t("income")
+                      : t("expenses")}
                 </button>
               ))}
             </div>
@@ -331,7 +333,7 @@ export default function TransactionsPage() {
           />
           <input
             type="text"
-            placeholder="Zoeken..."
+            placeholder={t("search")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-full md:w-48"
@@ -349,8 +351,8 @@ export default function TransactionsPage() {
           <div className="p-12 text-center">
             <p className="text-dark-400">
               {transactions.length === 0
-                ? "Geen transacties gevonden"
-                : "Geen transacties die voldoen aan de zoekcriteria"}
+                ? t("noTransactionsFound")
+                : t("noTransactionsMatchSearch")}
             </p>
           </div>
         ) : (
@@ -361,22 +363,22 @@ export default function TransactionsPage() {
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50">
                     <th className="px-6 py-3 text-left text-xs font-semibold text-dark-600">
-                      Datum
+                      {t("date")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-dark-600">
-                      Omschrijving
+                      {t("description")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-dark-600">
-                      Categorie
+                      {t("category")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-dark-600">
-                      Account
+                      {t("account")}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-semibold text-dark-600">
-                      Bedrag
+                      {t("amount")}
                     </th>
                     <th className="px-6 py-3 text-center text-xs font-semibold text-dark-600">
-                      Acties
+                      {t("actions")}
                     </th>
                   </tr>
                 </thead>
@@ -417,14 +419,14 @@ export default function TransactionsPage() {
                           <button
                             onClick={() => handleOpenModal(transaction)}
                             className="p-1.5 rounded-lg hover:bg-gray-100 text-dark-400 hover:text-primary-500 transition-colors"
-                            title="Bewerk"
+                            title={t("edit")}
                           >
                             <Edit2 size={16} />
                           </button>
                           <button
                             onClick={() => setConfirmDelete(transaction.id)}
                             className="p-1.5 rounded-lg hover:bg-red-50 text-dark-400 hover:text-primary-600 transition-colors"
-                            title="Verwijder"
+                            title={t("delete")}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -481,7 +483,7 @@ export default function TransactionsPage() {
                         onClick={() => handleOpenModal(transaction)}
                         className="mt-2 text-xs px-2 py-1 rounded bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
                       >
-                        Bewerk
+                        {t("edit")}
                       </button>
                     </div>
                   </div>
@@ -496,14 +498,14 @@ export default function TransactionsPage() {
       <Modal
         open={modalOpen}
         onClose={handleCloseModal}
-        title={editingId ? "Transactie bewerken" : "Nieuwe transactie"}
+        title={editingId ? t("editTransaction") : t("newTransaction")}
         maxWidth="max-w-md"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-1">
-              Omschrijving
+              {t("description")}
             </label>
             <input
               type="text"
@@ -512,7 +514,7 @@ export default function TransactionsPage() {
                 setFormData({ ...formData, description: e.target.value })
               }
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-              placeholder="Bijv. Boodschappen"
+              placeholder={t("descriptionPlaceholder")}
               required
             />
           </div>
@@ -520,7 +522,7 @@ export default function TransactionsPage() {
           {/* Amount */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-1">
-              Bedrag
+              {t("amount")}
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500 font-medium">
@@ -558,10 +560,10 @@ export default function TransactionsPage() {
                   }`}
                 >
                   {type === "income"
-                    ? "Inkomsten"
+                    ? t("income")
                     : type === "expense"
-                      ? "Uitgaven"
-                      : "Transfer"}
+                      ? t("expenses")
+                      : t("transfer")}
                 </button>
               ))}
             </div>
@@ -571,7 +573,7 @@ export default function TransactionsPage() {
           {formData.type !== "transfer" && (
             <div>
               <label className="block text-sm font-medium text-dark-800 mb-1">
-                Categorie
+                {t("category")}
               </label>
               <select
                 value={formData.categoryId}
@@ -580,7 +582,7 @@ export default function TransactionsPage() {
                 }
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm appearance-none bg-white"
               >
-                <option value="">Selecteer een categorie</option>
+                <option value="">{t("selectCategory")}</option>
                 {getFilteredCategories().map((cat) => (
                   <option key={cat.id} value={cat.id.toString()}>
                     {cat.name}
@@ -593,7 +595,7 @@ export default function TransactionsPage() {
           {/* From Account */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-1">
-              Account
+              {t("account")}
             </label>
             <select
               value={formData.accountId}
@@ -603,7 +605,7 @@ export default function TransactionsPage() {
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm appearance-none bg-white"
               required
             >
-              <option value="">Selecteer een account</option>
+              <option value="">{t("selectAccount")}</option>
               {accounts.map((acc) => (
                 <option key={acc.id} value={acc.id.toString()}>
                   {acc.name}
@@ -616,7 +618,7 @@ export default function TransactionsPage() {
           {formData.type === "transfer" && (
             <div>
               <label className="block text-sm font-medium text-dark-800 mb-1">
-                Naar Account
+                {t("toAccount")}
               </label>
               <select
                 value={formData.toAccountId}
@@ -625,7 +627,7 @@ export default function TransactionsPage() {
                 }
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm appearance-none bg-white"
               >
-                <option value="">Selecteer een account</option>
+                <option value="">{t("selectAccount")}</option>
                 {accounts.map((acc) => (
                   <option key={acc.id} value={acc.id.toString()}>
                     {acc.name}
@@ -638,7 +640,7 @@ export default function TransactionsPage() {
           {/* Date */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-1">
-              Datum
+              {t("date")}
             </label>
             <input
               type="date"
@@ -654,7 +656,7 @@ export default function TransactionsPage() {
           {/* Notes */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-1">
-              Notities
+              {t("notes")}
             </label>
             <textarea
               value={formData.notes}
@@ -662,7 +664,7 @@ export default function TransactionsPage() {
                 setFormData({ ...formData, notes: e.target.value })
               }
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm resize-none"
-              placeholder="Voeg notities toe..."
+              placeholder={t("notesPlaceholder")}
               rows={2}
             />
           </div>
@@ -670,7 +672,7 @@ export default function TransactionsPage() {
           {/* Tags */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-1">
-              Tags
+              {t("tags")}
             </label>
             <input
               type="text"
@@ -679,7 +681,7 @@ export default function TransactionsPage() {
                 setFormData({ ...formData, tags: e.target.value })
               }
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-              placeholder="Voeg tags toe (komma-gescheiden)"
+              placeholder={t("tagsPlaceholder")}
             />
           </div>
 
@@ -690,7 +692,7 @@ export default function TransactionsPage() {
               onClick={handleCloseModal}
               className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-dark-800 font-medium hover:bg-gray-50 transition-colors"
             >
-              Annuleren
+              {t("cancel")}
             </button>
             <button
               type="submit"
@@ -698,7 +700,7 @@ export default function TransactionsPage() {
               className="flex-1 px-4 py-2 rounded-lg bg-primary-500 text-white font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {saving && <Loader2 size={16} className="animate-spin" />}
-              {editingId ? "Opslaan" : "Toevoegen"}
+              {editingId ? t("save") : t("add")}
             </button>
           </div>
         </form>
@@ -709,17 +711,17 @@ export default function TransactionsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <h3 className="text-lg font-bold text-dark-800 mb-2">
-              Transactie verwijderen?
+              {t("deleteTransaction")}
             </h3>
             <p className="text-sm text-dark-600 mb-6">
-              Deze actie kan niet ongedaan worden gemaakt.
+              {t("deleteConfirm")}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
                 className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-dark-800 font-medium hover:bg-gray-50 transition-colors"
               >
-                Annuleren
+                {t("cancel")}
               </button>
               <button
                 onClick={() => handleDeleteTransaction(confirmDelete)}
@@ -729,7 +731,7 @@ export default function TransactionsPage() {
                 {deleting === confirmDelete && (
                   <Loader2 size={16} className="animate-spin" />
                 )}
-                Verwijderen
+                {t("deleteAction")}
               </button>
             </div>
           </div>

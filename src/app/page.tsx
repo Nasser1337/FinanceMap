@@ -14,6 +14,7 @@ import StatCard from "@/components/StatCard";
 import SankeyDiagram from "@/components/SankeyDiagram";
 import PageHeader from "@/components/PageHeader";
 import { formatCurrency, formatDate, getCurrentMonth } from "@/lib/utils";
+import { useLanguage } from "@/lib/LanguageContext";
 
 interface DashboardData {
   totalIncome: number;
@@ -38,6 +39,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [month, setMonth] = useState(getCurrentMonth());
   const [seeding, setSeeding] = useState(false);
+  const { t } = useLanguage();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -58,7 +60,7 @@ export default function DashboardPage() {
       const res = await fetch("/api/seed", { method: "POST" });
       if (res.ok) {
         await fetchData();
-        alert("Database gevuld met tandartspraktijk categorieën!");
+        alert(t("seedSuccess"));
       }
     } catch (e) {
       console.error("Seed failed:", e);
@@ -78,8 +80,8 @@ export default function DashboardPage() {
     <div className="p-6 lg:p-8 max-w-[1400px] mx-auto">
       <div className="flex items-center justify-between mb-6">
         <PageHeader
-          title="Dashboard"
-          subtitle="Financieel overzicht van je tandartspraktijk"
+          title={t("dashboard")}
+          subtitle={t("dashboardSubtitle")}
           icon={LayoutDashboard}
         />
         <div className="flex items-center gap-3">
@@ -93,10 +95,10 @@ export default function DashboardPage() {
             onClick={handleSeed}
             disabled={seeding}
             className="flex items-center gap-2 px-3 py-2 bg-dark-800 text-white rounded-xl text-xs font-medium hover:bg-dark-700 transition-colors disabled:opacity-50"
-            title="Vul database met tandartspraktijk categorieën"
+            title={t("seedDb")}
           >
             <DatabaseZap size={14} />
-            {seeding ? "Bezig..." : "Seed DB"}
+            {seeding ? t("seeding") : t("seedDb")}
           </button>
         </div>
       </div>
@@ -104,30 +106,30 @@ export default function DashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
-          title="Inkomsten"
+          title={t("income")}
           value={formatCurrency(data?.totalIncome || 0)}
           subtitle={`${month}`}
           icon={TrendingUp}
           color="green"
         />
         <StatCard
-          title="Uitgaven"
+          title={t("expenses")}
           value={formatCurrency(data?.totalExpenses || 0)}
           subtitle={`${month}`}
           icon={TrendingDown}
           color="red"
         />
         <StatCard
-          title="Balans"
+          title={t("balance")}
           value={formatCurrency(data?.balance || 0)}
-          subtitle="Inkomsten - Uitgaven"
+          subtitle={t("incomeMinusExpenses")}
           icon={Scale}
           color={(data?.balance || 0) >= 0 ? "green" : "red"}
         />
         <StatCard
-          title="Transacties"
+          title={t("transactionsCount")}
           value={String(data?.transactionCount || 0)}
-          subtitle="Deze maand"
+          subtitle={t("thisMonth")}
           icon={ArrowLeftRight}
           color="black"
         />
@@ -135,9 +137,9 @@ export default function DashboardPage() {
 
       {/* Sankey Diagram */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
-        <h2 className="text-lg font-bold text-dark-800 mb-1">Geldstroom</h2>
+        <h2 className="text-lg font-bold text-dark-800 mb-1">{t("cashFlow")}</h2>
         <p className="text-xs text-dark-400 mb-4">
-          Visueel overzicht van waar je geld vandaan komt en naartoe gaat
+          {t("cashFlowSubtitle")}
         </p>
         <SankeyDiagram data={data?.sankeyData || { nodes: [], links: [] }} />
       </div>
@@ -146,7 +148,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top spending */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="text-lg font-bold text-dark-800 mb-4">Top Uitgaven per Categorie</h2>
+          <h2 className="text-lg font-bold text-dark-800 mb-4">{t("topSpendingByCategory")}</h2>
           {data?.spendingByCategory && data.spendingByCategory.length > 0 ? (
             <div className="space-y-3">
               {data.spendingByCategory.slice(0, 8).map((cat, i) => {
@@ -172,13 +174,13 @@ export default function DashboardPage() {
               })}
             </div>
           ) : (
-            <p className="text-sm text-dark-400">Nog geen uitgaven deze maand.</p>
+            <p className="text-sm text-dark-400">{t("noExpensesThisMonth")}</p>
           )}
         </div>
 
         {/* Recent transactions */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="text-lg font-bold text-dark-800 mb-4">Recente Transacties</h2>
+          <h2 className="text-lg font-bold text-dark-800 mb-4">{t("recentTransactions")}</h2>
           {data?.recentTransactions && data.recentTransactions.length > 0 ? (
             <div className="space-y-2">
               {data.recentTransactions.map((tx) => (
@@ -195,7 +197,7 @@ export default function DashboardPage() {
                     <div>
                       <p className="text-sm font-medium text-dark-700">{tx.description}</p>
                       <p className="text-xs text-dark-400">
-                        {tx.categoryName || "Geen categorie"} · {formatDate(tx.date)}
+                        {tx.categoryName || t("noCategory")} · {formatDate(tx.date)}
                       </p>
                     </div>
                   </div>
@@ -211,7 +213,7 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-dark-400">Nog geen transacties.</p>
+            <p className="text-sm text-dark-400">{t("noTransactionsYet")}</p>
           )}
         </div>
       </div>

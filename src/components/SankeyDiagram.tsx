@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { sankey, sankeyLinkHorizontal, SankeyNode, SankeyLink } from "d3-sankey";
+import { useLanguage } from "@/lib/LanguageContext";
 
 interface SankeyNodeExtra {
   name: string;
@@ -33,6 +34,7 @@ export default function SankeyDiagram({ data, width: propWidth, height: propHeig
   const containerRef = useRef<HTMLDivElement>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null);
   const [dimensions, setDimensions] = useState({ width: propWidth || 900, height: propHeight || 500 });
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -59,7 +61,7 @@ export default function SankeyDiagram({ data, width: propWidth, height: propHeig
   if (!data || !data.nodes.length || !data.links.length) {
     return (
       <div className="flex items-center justify-center h-64 text-dark-400 text-sm">
-        Nog geen transacties om weer te geven. Voeg transacties toe om de geldstroom te zien.
+        {t("noTransactionsToShow")}
       </div>
     );
   }
@@ -86,7 +88,7 @@ export default function SankeyDiagram({ data, width: propWidth, height: propHeig
   } catch {
     return (
       <div className="flex items-center justify-center h-64 text-dark-400 text-sm">
-        Kan Sankey diagram niet genereren met huidige data.
+        {t("cannotGenerateSankey")}
       </div>
     );
   }

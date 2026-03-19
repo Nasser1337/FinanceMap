@@ -80,16 +80,28 @@ export async function GET(request: NextRequest) {
     // Generate Sankey diagram data
     const sankeyData = generateSankeyData(monthTransactions);
 
+    // Spending by category as array with color
+    const spendingByCategoryArray = Object.entries(spendingByCategory).map(([name, total]) => {
+      const cat = monthTransactions.find((tx) => tx.category?.name === name)?.category;
+      return { name, total, color: cat?.color || "#DC2626" };
+    }).sort((a, b) => b.total - a.total);
+
     return NextResponse.json({
-      summary: {
-        totalIncome,
-        totalExpenses,
-        balance: totalBalance,
-        month,
-      },
-      recentTransactions,
-      spendingByCategory,
-      sankey: sankeyData,
+      totalIncome,
+      totalExpenses,
+      balance: totalBalance,
+      transactionCount: monthTransactions.length,
+      recentTransactions: recentTransactions.map((tx) => ({
+        id: tx.id,
+        description: tx.description,
+        amount: tx.amount,
+        type: tx.type,
+        date: tx.date,
+        categoryName: tx.category?.name || null,
+        accountName: tx.account?.name || null,
+      })),
+      spendingByCategory: spendingByCategoryArray,
+      sankeyData,
     });
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
@@ -108,13 +120,10 @@ function getCurrentMonth(): string {
 }
 
 function generateSankeyData(transactionList: any[]) {
-  const nodes: { id: string; name: string }[] = [
-    { id: "revenue", name: "Revenue" },
-  ];
+  const nodeNames: string[] = ["Omzet"];
   const nodeSet = new Set<string>();
-  nodeSet.add("revenue");
+  nodeSet.add("Omzet");
 
-  const links: { source: string; target: string; value: number }[] = [];
   const incomeByCategory: Record<string, number> = {};
   const expenseByCategory: Record<string, number> = {};
 
@@ -125,7 +134,7 @@ function generateSankeyData(transactionList: any[]) {
     if (tx.type === "income" && tx.category) {
       const categoryName = tx.category.name;
       if (!nodeSet.has(categoryName)) {
-        nodes.push({ id: categoryName, name: categoryName });
+        nodeNames.push(categoryName);
         nodeSet.add(categoryName);
       }
       incomeByCategory[categoryName] =
@@ -133,7 +142,7 @@ function generateSankeyData(transactionList: any[]) {
     } else if (tx.type === "expense" && tx.category) {
       const categoryName = tx.category.name;
       if (!nodeSet.has(categoryName)) {
-        nodes.push({ id: categoryName, name: categoryName });
+        nodeNames.push(categoryName);
         nodeSet.add(categoryName);
       }
       expenseByCategory[categoryName] =
@@ -141,26 +150,25 @@ function generateSankeyData(transactionList: any[]) {
     }
   });
 
-  // Create links: income categories -> Revenue
+  const nodes = nodeNames.map((name) => ({ name }));
+  const links: { source: number; target: number; value: number }[] = [];
+  const revenueIndex = 0;
+
+  // Create links: income categories -> Omzet
   Object.entries(incomeByCategory).forEach(([category, amount]) => {
-    links.push({
-      source: category,
-      target: "revenue",
-      value: amount,
-    });
+    const sourceIndex = nodeNames.indexOf(category);
+    if (sourceIndex !== -1) {
+      links.push({ source: sourceIndex, target: revenueIndex, value: amount });
+    }
   });
 
-  // Create links: Revenue -> expense categories
+  // Create links: Omzet -> expense categories
   Object.entries(expenseByCategory).forEach(([category, amount]) => {
-    links.push({
-      source: "revenue",
-      target: category,
-      value: amount,
-    });
+    const targetIndex = nodeNames.indexOf(category);
+    if (targetIndex !== -1) {
+      links.push({ source: revenueIndex, target: targetIndex, value: amount });
+    }
   });
 
-  return {
-    nodes,
-    links,
-  };
+  return { nodes, links };
 }

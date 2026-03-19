@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import PageHeader from "@/components/PageHeader";
 import Modal from "@/components/Modal";
 import { Tag, Edit2, Trash2, Loader2, Plus } from "lucide-react";
+import { useLanguage } from "@/lib/LanguageContext";
 
 interface Category {
   id: number;
@@ -34,6 +35,7 @@ const COLOR_PALETTE = [
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -95,7 +97,7 @@ export default function CategoriesPage() {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      alert("Vul een categorienaam in");
+      alert(t("fillCategoryName"));
       return;
     }
 
@@ -125,7 +127,7 @@ export default function CategoriesPage() {
       handleCloseModal();
     } catch (error) {
       console.error("Error saving category:", error);
-      alert("Er is een fout opgetreden bij het opslaan");
+      alert(t("saveError"));
     } finally {
       setSaving(false);
     }
@@ -145,7 +147,7 @@ export default function CategoriesPage() {
       setConfirmDelete(null);
     } catch (error) {
       console.error("Error deleting category:", error);
-      alert("Er is een fout opgetreden bij het verwijderen");
+      alert(t("deleteError"));
     } finally {
       setDeleting(null);
     }
@@ -167,14 +169,14 @@ export default function CategoriesPage() {
         <button
           onClick={() => handleOpenModal(category)}
           className="p-1.5 rounded-lg hover:bg-gray-100 text-dark-400 hover:text-primary-500 transition-colors"
-          title="Bewerk"
+          title={t("edit")}
         >
           <Edit2 size={16} />
         </button>
         <button
           onClick={() => setConfirmDelete(category.id)}
           className="p-1.5 rounded-lg hover:bg-red-50 text-dark-400 hover:text-primary-600 transition-colors"
-          title="Verwijder"
+          title={t("delete")}
         >
           <Trash2 size={16} />
         </button>
@@ -185,7 +187,7 @@ export default function CategoriesPage() {
   const EmptyState = ({ type }: { type: string }) => (
     <div className="p-12 text-center">
       <p className="text-dark-400 text-sm mb-4">
-        Geen {type === "income" ? "inkomsten" : "uitgaven"}categorieën gevonden
+        {type === "income" ? t("noIncomeCategoriesFound") : t("noExpenseCategoriesFound")}
       </p>
       <button
         onClick={() => {
@@ -200,7 +202,7 @@ export default function CategoriesPage() {
         className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors text-sm font-medium"
       >
         <Plus size={14} />
-        Toevoegen
+        {t("add")}
       </button>
     </div>
   );
@@ -209,11 +211,11 @@ export default function CategoriesPage() {
     <div className="p-6 max-w-7xl">
       {/* Page Header */}
       <PageHeader
-        title="Categorieën"
-        subtitle="Beheer inkomsten- en uitgavencategorieën"
+        title={t("categories")}
+        subtitle={t("manageCategories")}
         icon={Tag}
         action={{
-          label: "Toevoegen",
+          label: t("add"),
           onClick: () => handleOpenModal(),
         }}
       />
@@ -228,9 +230,9 @@ export default function CategoriesPage() {
           {/* Income Categories */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-              <h2 className="text-lg font-bold text-dark-800">Inkomstencategorieën</h2>
+              <h2 className="text-lg font-bold text-dark-800">{t("incomeCategories")}</h2>
               <p className="text-xs text-dark-400 mt-1">
-                {incomeCategories.length} categorie{incomeCategories.length !== 1 ? "n" : ""}
+                {incomeCategories.length} {incomeCategories.length !== 1 ? t("categoriesCount") : t("categoryCount")}
               </p>
             </div>
             <div className="divide-y divide-gray-100">
@@ -249,9 +251,9 @@ export default function CategoriesPage() {
           {/* Expense Categories */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-              <h2 className="text-lg font-bold text-dark-800">Uitgavencategorieën</h2>
+              <h2 className="text-lg font-bold text-dark-800">{t("expenseCategories")}</h2>
               <p className="text-xs text-dark-400 mt-1">
-                {expenseCategories.length} categorie{expenseCategories.length !== 1 ? "n" : ""}
+                {expenseCategories.length} {expenseCategories.length !== 1 ? t("categoriesCount") : t("categoryCount")}
               </p>
             </div>
             <div className="divide-y divide-gray-100">
@@ -273,14 +275,14 @@ export default function CategoriesPage() {
       <Modal
         open={modalOpen}
         onClose={handleCloseModal}
-        title={editingId ? "Categorie bewerken" : "Nieuwe categorie"}
+        title={editingId ? t("editCategory") : t("newCategory")}
         maxWidth="max-w-md"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-1">
-              Categorienaam
+              {t("categoryName")}
             </label>
             <input
               type="text"
@@ -289,7 +291,7 @@ export default function CategoriesPage() {
                 setFormData({ ...formData, name: e.target.value })
               }
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-              placeholder="Bijv. Boodschappen"
+              placeholder={t("categoryNamePlaceholder")}
               required
             />
           </div>
@@ -311,7 +313,7 @@ export default function CategoriesPage() {
                       : "bg-gray-100 text-dark-600 hover:bg-gray-200"
                   }`}
                 >
-                  {type === "income" ? "Inkomsten" : "Uitgaven"}
+                  {type === "income" ? t("income") : t("expenses")}
                 </button>
               ))}
             </div>
@@ -320,7 +322,7 @@ export default function CategoriesPage() {
           {/* Color Picker */}
           <div>
             <label className="block text-sm font-medium text-dark-800 mb-2">
-              Kleur
+              {t("color")}
             </label>
             <div className="grid grid-cols-4 gap-2">
               {COLOR_PALETTE.map((color) => (
@@ -347,7 +349,7 @@ export default function CategoriesPage() {
               onClick={handleCloseModal}
               className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-dark-800 font-medium hover:bg-gray-50 transition-colors"
             >
-              Annuleren
+              {t("cancel")}
             </button>
             <button
               type="submit"
@@ -355,7 +357,7 @@ export default function CategoriesPage() {
               className="flex-1 px-4 py-2 rounded-lg bg-primary-500 text-white font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {saving && <Loader2 size={16} className="animate-spin" />}
-              {editingId ? "Opslaan" : "Toevoegen"}
+              {editingId ? t("save") : t("add")}
             </button>
           </div>
         </form>
@@ -366,17 +368,17 @@ export default function CategoriesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <h3 className="text-lg font-bold text-dark-800 mb-2">
-              Categorie verwijderen?
+              {t("deleteCategory")}
             </h3>
             <p className="text-sm text-dark-600 mb-6">
-              Deze actie kan niet ongedaan worden gemaakt.
+              {t("deleteConfirm")}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
                 className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-dark-800 font-medium hover:bg-gray-50 transition-colors"
               >
-                Annuleren
+                {t("cancel")}
               </button>
               <button
                 onClick={() => handleDeleteCategory(confirmDelete)}
@@ -386,7 +388,7 @@ export default function CategoriesPage() {
                 {deleting === confirmDelete && (
                   <Loader2 size={16} className="animate-spin" />
                 )}
-                Verwijderen
+                {t("deleteAction")}
               </button>
             </div>
           </div>
