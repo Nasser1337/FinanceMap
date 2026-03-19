@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
 import { LanguageProvider } from "@/lib/LanguageContext";
+import SessionProvider from "@/components/SessionProvider";
+import AppShell from "@/components/AppShell";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,14 +19,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/logo.png" type="image/png" />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <LanguageProvider>
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto bg-gray-50">
-              {children}
-            </main>
-          </div>
-        </LanguageProvider>
+        <SessionProvider>
+          <LanguageProvider>
+            <AppShell>{children}</AppShell>
+          </LanguageProvider>
+        </SessionProvider>
       </body>
     </html>
   );
